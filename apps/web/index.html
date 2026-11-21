@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>WorkFlowPlus</title>
+    <script>
+      try {
+        const stored = JSON.parse(sessionStorage.getItem('workflowplus.session') || 'null');
+        const session = stored && stored.session;
+        const organizationId = (stored && stored.organizationId) || '';
+        const scope =
+          session && session.kind === 'employee' && session.employeeId
+            ? `employee:${organizationId}:${session.employeeId}`
+            : session && session.kind === 'organization'
+              ? `organization:${organizationId}`
+              : `anonymous:${organizationId}`;
+        const ui = JSON.parse(
+          localStorage.getItem(`workflowplus.ui.${scope}`) ||
+            localStorage.getItem('workflowplus.ui') ||
+            '{}',
+        );
+        if (ui.theme === 'dark') document.documentElement.dataset.theme = 'dark';
+        if (ui.density === 'compact') document.documentElement.dataset.density = 'compact';
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

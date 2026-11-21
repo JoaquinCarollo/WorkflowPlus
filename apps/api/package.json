@@ -1,0 +1,28 @@
+{
+  "name": "@taskflow/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "@taskflow/domain": "*",
+    "cors": "^2.8.5",
+    "dotenv": "^18.0.9",
+    "express": "^5.1.0",
+    "nodemailer": "^10.4.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/nodemailer": "^8.0.2",
+    "tsx": "^4.20.6",
+    "vitest": "^4.0.8"
+  }
+}

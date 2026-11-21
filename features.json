@@ -1,0 +1,137 @@
+{
+  "project": "WorkFlowPlus",
+  "features": [
+    {
+      "id": "foundation",
+      "name": "Monorepo and quality harness",
+      "status": "done",
+      "acceptance": "npm run check passes (verified 2026-11-04)"
+    },
+    {
+      "id": "tenant-schema",
+      "name": "Supabase tenant schema and RLS",
+      "status": "planned",
+      "acceptance": "Migration applies and cross-tenant access is denied"
+    },
+    {
+      "id": "workspace-ui",
+      "name": "Responsive presentation and workspace interface",
+      "status": "done",
+      "acceptance": "Public presentation is visible only before access; workspace navigation is visible only after successful authentication and npm run check passes (verified 2026-11-04)"
+    },
+    {
+      "id": "authentication",
+      "name": "Authentication and organization onboarding",
+      "status": "done",
+      "acceptance": "Organizations can register/sign in through Supabase Auth from the web access screen; registration requires company name, email, password, and organization type; invalid credentials are denied without exposing passwords or account enumeration (verified 2026-11-14)"
+    },
+    {
+      "id": "employee-code-access",
+      "name": "Employee invitation-only code access",
+      "status": "done",
+      "acceptance": "An owner can invite an employee and deliver a reusable access code by email; employees authenticate only with that code plus the organization id (verified 2026-11-14)"
+    },
+    {
+      "id": "workforce",
+      "name": "Employees, roles, skills and availability",
+      "status": "done",
+      "acceptance": "Managers can maintain workforce data (invite, directory, profile, skills, availability, workload and deletion with task handling) (verified 2026-11-14)"
+    },
+    {
+      "id": "tasks",
+      "name": "Tasks and assignments",
+      "status": "done",
+      "acceptance": "Managers can create and assign tenant-scoped tasks, filter them, change status, reassign and review details (verified 2026-11-14)"
+    },
+    {
+      "id": "department-leads",
+      "name": "Department leads",
+      "status": "done",
+      "acceptance": "Owner can assign an administrative employee as department head; department lead can only assign tasks to operative employees in their department (verified 2026-11-15)"
+    },
+    {
+      "id": "departments",
+      "name": "Departments management",
+      "status": "done",
+      "acceptance": "Owner can create and delete tenant-scoped departments (one or several at a time); inviting a new employee requires selecting a department from the list (or leaving it empty to assign no department); employee profile allows changing the department to one from the list (verified 2026-11-15)"
+    },
+    {
+      "id": "ai-coordinator",
+      "name": "AI recommendation coordinator",
+      "status": "planned",
+      "acceptance": "Produces explainable reviewed assignment proposals"
+    },
+    {
+      "id": "help-section",
+      "name": "Centro de ayuda por sección",
+      "status": "done",
+      "acceptance": "El usuario puede abrir Ayuda desde la navegación y ver cómo funcionan Empleados, Vista general y Tareas; npm run check pasa"
+    },
+    {
+      "id": "task-checklist",
+      "name": "Lista de verificación dentro de tarea",
+      "status": "done",
+      "acceptance": "Las tareas pueden guardar ítems tenant-scoped con estado completado; la UI permite agregar, marcar, quitar y guardar sin alterar estados ni transiciones; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "csv-report-export",
+      "name": "Exportación de reportes CSV",
+      "status": "done",
+      "acceptance": "Vista general exporta las tareas del período visible a CSV con datos filtrados por organización/rol y celdas escapadas; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "dark-mode",
+      "name": "Modo Nocturno",
+      "status": "done",
+      "acceptance": "El workspace ofrece un toggle accesible de Modo Nocturno, persistente en localStorage y aplicado antes del primer pintado; las secciones, incluida Empleados, comparten tonos oscuros y acentos; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "sections-dropdown",
+      "name": "Menú desplegable de secciones",
+      "status": "done",
+      "acceptance": "El workspace ofrece un control de disclosure con todas las secciones disponibles, cierre con Escape/clic fuera y foco accesible; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "required-task-fields",
+      "name": "Campos obligatorios al crear tareas",
+      "status": "done",
+      "acceptance": "La creación de tareas exige título, descripción, categoría, prioridad, responsable, fecha de entrega y tiempo estimado, con mensajes anunciados y sin crear la tarea si falta algún dato; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "task-assignment-email",
+      "name": "Correo de asignación de tareas",
+      "status": "done",
+      "acceptance": "El empleado recibe un correo tenant-scoped al crear o reasignar una tarea y al materializar ocurrencias recurrentes; no se envían correos duplicados por cambios sin responsable y la API informa assignmentEmailSent; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "workspace-skeletons-empty-states",
+      "name": "Skeletons y estados vacíos con acción",
+      "status": "done",
+      "acceptance": "La carga inicial muestra un skeleton accesible sin listas vacías simultáneas; Tareas y Empleados muestran estados vacíos con acción solo para roles autorizados; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "workspace-density",
+      "name": "Densidad cómoda y compacta",
+      "status": "done",
+      "acceptance": "El toggle accesible cambia densidad sin alterar datos ni permisos; la preferencia se persiste por organizationId con compatibilidad para estados legacy; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "workspace-microinteractions",
+      "name": "Microinteracciones accesibles",
+      "status": "done",
+      "acceptance": "Botones, filtros y tarjetas tienen feedback visual sutil; las animaciones se desactivan con prefers-reduced-motion; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "workspace-quick-views",
+      "name": "Vistas rápidas laterales",
+      "status": "done",
+      "acceptance": "Tareas y empleados ofrecen un panel lateral de solo lectura con datos ya cargados, cierre con Escape/backdrop, foco administrado y acceso al detalle completo sin mutar datos; npm run check pasa (verified 2026-11-19)"
+    },
+    {
+      "id": "task-form-and-lead-ui-improvements",
+      "name": "Mejoras de alta de tareas, detalle y jefes de departamento",
+      "status": "done",
+      "acceptance": "La categoría del formulario usa un select con el mismo estilo que prioridad; el detalle de tareas ya no muestra la lista de verificación; la flecha se reemplaza por un botón Detalle; el alta permite adjuntar uno o más archivos opcionales tenant-scoped que se listan en el detalle; Actividad reciente registra asignación y remoción de jefes; remover un jefe abre un alertdialog con Cancelar y Confirmar en rojo; npm run check pasa"
+    }
+  ]
+}
