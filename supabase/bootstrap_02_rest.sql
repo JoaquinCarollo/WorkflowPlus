@@ -259,7 +259,7 @@ alter table public.tasks
   add constraint tasks_completion_timestamps_check
     check (
       (completed_at is null or status = 'done')
-      and (cancelled_at is null or status = 'cancelled')
+      and (cancelled_at is null or status::text = 'cancelled')
     );
 
 create index if not exists tasks_organization_completed_at_idx
