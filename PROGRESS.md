@@ -509,3 +509,12 @@
 - Revisión de mejora: se corrigieron límites acumulativos de archivos entre selecciones, validación del contenido base64 en el servidor, filtrado por organización en `listTaskAttachments`, textos de ayuda, foco del diálogo y mensajes de actividad; se agregaron tests para los límites y el data URL falsificado.
 - Verification attempt 4: `npm run check` pasó format, lint, typecheck y 83 API tests, pero falló el test del centro de ayuda porque el encabezado esperado seguía siendo "Comentarios y adjuntos"; se actualizó a "Comentarios y archivos".
 - Verification attempt 5: `npm run check` pasó format, lint, typecheck, 83 API tests y 52 web tests. Correction iterations del ciclo de revisión: 2/3. No blockers remain.
+
+## 2026-11-21 - Publicación y bootstrap de Supabase
+
+- Se agregó `.github/workflows/deploy-pages.yml` para publicar el frontend en GitHub Pages y `base: '/WorkflowPlus/'` en `apps/web/vite.config.ts`; `npm run check` pasó y los cambios se subieron en `ea85760`.
+- Se agregó `render.yaml` con el servicio API del monorepo (`buildCommand`, `startCommand`, `healthCheckPath: /health`, `WEB_ORIGIN` de Pages y variables de Supabase con `sync: false`); se simplificaron las variables de email opcionales en `0bd5bf4`.
+- Se generó `supabase/bootstrap_all.sql` con las migraciones ordenadas para ejecutarlas de una sola vez en el SQL Editor de Supabase; subido en `1715b92`.
+- Error de verificación en Supabase: `22P02: invalid input value for enum task_status: "cancelled"`. La migración `20261109000002_task_lifecycle_and_activity.sql` agregaba una restricción que comparaba `status` con `'cancelled'`, pero `task_status` no tenía ese valor.
+- Corrección: nueva migración timestampada `20261109000000_align_task_status_enum.sql`, que agrega `pending`, `completed`, `cancelled` e `in_review` a `task_status` antes de la restricción. Se regeneró `supabase/bootstrap_all.sql` con 13 migraciones y se volvió a ejecutar `npm run check`.
+- Nota: el error ocurrió en la verificación de BD, no en `npm run check`; el quality gate local sigue pasando con 83 API tests y 52 web tests.
