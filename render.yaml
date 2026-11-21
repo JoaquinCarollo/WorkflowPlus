@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: workflowplus-api
+    runtime: node
+    plan: free
+    healthCheckPath: /health
+    buildCommand: npm ci && npm run build --workspace=@taskflow/api
+    startCommand: node apps/api/dist/server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: WEB_ORIGIN
+        value: https://JoaquinCarollo.github.io/WorkflowPlus/
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: TRANSACTIONAL_EMAIL_API_URL
+        sync: false
