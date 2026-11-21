@@ -203,15 +203,6 @@ create unique index employee_access_invites_global_recipient_idx
 create unique index employee_access_invites_global_digest_idx
   on public.employee_access_invites (access_code_digest)
   where status in ('pending', 'sent');
-do $$
-begin
-  alter type public.task_status add value if not exists 'pending';
-  alter type public.task_status add value if not exists 'completed';
-  alter type public.task_status add value if not exists 'cancelled';
-  alter type public.task_status add value if not exists 'in_review';
-exception
-  when duplicate_object then null;
-end $$;
 -- Employee authority level: administrative employees can create/assign tasks like the
 -- owner, operative employees can only view organization tasks. Only the organization
 -- owner can invite employees (see RLS policy below).
