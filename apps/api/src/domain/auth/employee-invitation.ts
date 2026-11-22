@@ -592,7 +592,9 @@ export function createSmtpTransactionalEmailMailer(
           text: message.text,
         });
         return { emailSent: true };
-      } catch {
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : 'unknown error';
+        console.error('[email] SMTP delivery failed:', reason);
         return { emailSent: false };
       }
     },

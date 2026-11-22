@@ -1,4 +1,4 @@
-﻿import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../app.js';
 import { digestEmployeeAccessCode } from './employee-access-code.js';
 import {
@@ -9,6 +9,7 @@ import {
   createConfiguredEmployeeCodeMailer,
   createEmployeeInvitation,
   createSmtpEmployeeCodeMailer,
+  createSmtpTransactionalEmailMailer,
   employeeCodeEmailOutbox,
   employeeCodeUniquenessAgent,
   employeeEmailUniquenessAgent,
@@ -632,5 +633,21 @@ describe('transactional email provider configuration', () => {
     delete process.env.SMTP_PASS;
     process.env.TRANSACTIONAL_EMAIL_API_URL = 'https://mail.example.test/send';
     expect(() => assertTransactionalEmailProviderConfigured()).not.toThrow();
+  });
+
+  it('logs SMTP failures without throwing or exposing credentials', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const mailer = createSmtpTransactionalEmailMailer(async () => {
+      throw new Error('Invalid login: 535');
+    });
+
+    try {
+      await expect(
+        mailer.sendEmail({ to: 'owner@example.test', subject: 'Prueba', text: 'Contenido' }),
+      ).resolves.toEqual({ emailSent: false });
+      expect(errorSpy).toHaveBeenCalledWith('[email] SMTP delivery failed:', 'Invalid login: 535');
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });
