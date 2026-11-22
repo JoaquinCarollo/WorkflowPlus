@@ -256,13 +256,22 @@ const assistantQuerySchema = z.object({
   query: z.string().min(1),
 });
 
+function allowedWebOrigin(): string {
+  const configured = process.env.WEB_ORIGIN ?? 'http://localhost:5173';
+  try {
+    return new URL(configured).origin;
+  } catch {
+    throw new Error('WEB_ORIGIN must be an absolute URL');
+  }
+}
+
 export function createApp(
   authClient?: SupabaseAuthClient,
   employeeInvitationDeps: EmployeeInvitationDeps = {},
   taskAssignmentDeps: TaskAssignmentNotificationDeps = {},
 ) {
   const app = express();
-  app.use(cors({ origin: process.env.WEB_ORIGIN ?? 'http://localhost:5173' }));
+  app.use(cors({ origin: allowedWebOrigin() }));
   app.use(express.json({ limit: '16mb' }));
   app.get('/health', (_request, response) => response.json({ status: 'ok' }));
 
