@@ -7,6 +7,7 @@ import {
   canAssignTaskToEmployee,
   clearEmployeeInvitationsForTest,
   createConfiguredEmployeeCodeMailer,
+  createConfiguredTransactionalEmailMailer,
   createEmployeeInvitation,
   createSmtpEmployeeCodeMailer,
   createSmtpTransactionalEmailMailer,
@@ -647,6 +648,34 @@ describe('transactional email provider configuration', () => {
       ).resolves.toEqual({ emailSent: false });
       expect(errorSpy).toHaveBeenCalledWith('[email] SMTP delivery failed:', 'Invalid login: 535');
     } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('logs HTTP provider failures without exposing credentials', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    process.env.TRANSACTIONAL_EMAIL_API_URL = 'https://mail.example.test/send';
+
+    const originalFetch = globalThis.fetch;
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error('network down');
+    }) as unknown as typeof fetch;
+
+    try {
+      await expect(
+        createConfiguredTransactionalEmailMailer().sendEmail({
+          to: 'owner@example.test',
+          subject: 'Prueba',
+          text: 'Contenido',
+        }),
+      ).resolves.toEqual({ emailSent: false });
+      expect(errorSpy).toHaveBeenCalledWith('[email] HTTP email delivery failed:', 'network down');
+    } finally {
+      globalThis.fetch = originalFetch;
       errorSpy.mockRestore();
     }
   });

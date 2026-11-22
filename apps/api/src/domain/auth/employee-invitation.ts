@@ -700,6 +700,7 @@ export function createConfiguredTransactionalEmailMailer(): TransactionalEmailMa
     async sendEmail(message: TransactionalEmailMessage) {
       const smtpConfig = readSmtpConfig();
       if (smtpConfig) {
+        console.info('[email] Using SMTP provider');
         return createSmtpTransactionalEmailMailer((options) =>
           sendViaSmtp(smtpConfig, options),
         ).sendEmail(message);
@@ -712,6 +713,7 @@ export function createConfiguredTransactionalEmailMailer(): TransactionalEmailMa
         }
         return { emailSent: false };
       }
+      console.info('[email] Using HTTP transactional email provider');
       const apiKey = process.env.TRANSACTIONAL_EMAIL_API_KEY;
       const from = process.env.TRANSACTIONAL_EMAIL_FROM ?? 'access@your-domain.com';
       try {
@@ -723,8 +725,13 @@ export function createConfiguredTransactionalEmailMailer(): TransactionalEmailMa
           },
           body: JSON.stringify({ from, ...message }),
         });
+        if (!response.ok) {
+          console.error('[email] HTTP email delivery failed with status', response.status);
+        }
         return { emailSent: response.ok };
-      } catch {
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : 'unknown error';
+        console.error('[email] HTTP email delivery failed:', reason);
         return { emailSent: false };
       }
     },
