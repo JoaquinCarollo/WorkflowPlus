@@ -651,6 +651,62 @@ async function sendViaSmtp(config: SmtpConfig, options: SmtpMailOptions): Promis
   await transporter.sendMail(options);
 }
 
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '>':
+        return '&gt;';
+      case '"':
+        return '&quot;';
+      default:
+        return '&#39;';
+    }
+  });
+}
+
+function buildHttpEmailRequest(
+  apiUrl: string,
+  from: string,
+  message: { to: string; subject: string; text: string },
+  apiKey: string | undefined,
+  extra: Record<string, unknown> = {},
+): { headers: Record<string, string>; body: string } {
+  let isBrevo = false;
+  try {
+    isBrevo = new URL(apiUrl).hostname === 'api.brevo.com';
+  } catch {
+    isBrevo = false;
+  }
+
+  if (isBrevo) {
+    return {
+      headers: {
+        'content-type': 'application/json',
+        ...(apiKey ? { 'api-key': apiKey } : {}),
+      },
+      body: JSON.stringify({
+        sender: { name: 'WorkFlowPlus', email: from },
+        to: [{ email: message.to }],
+        subject: message.subject,
+        textContent: message.text,
+        htmlContent: `<p>${escapeHtml(message.text)}</p>`,
+      }),
+    };
+  }
+
+  return {
+    headers: {
+      'content-type': 'application/json',
+      ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+    },
+    body: JSON.stringify({ from, ...message, ...extra }),
+  };
+}
+
 export function createConfiguredEmployeeCodeMailer(): EmployeeCodeEmailMailer {
   assertTransactionalEmailProviderConfigured();
   return {
@@ -671,23 +727,31 @@ export function createConfiguredEmployeeCodeMailer(): EmployeeCodeEmailMailer {
       }
       const apiKey = process.env.TRANSACTIONAL_EMAIL_API_KEY;
       const from = process.env.TRANSACTIONAL_EMAIL_FROM ?? 'access@your-domain.com';
+      const request = buildHttpEmailRequest(
+        apiUrl,
+        from,
+        {
+          to: message.to,
+          subject: 'Tu c\u00f3digo de acceso a WorkFlowPlus',
+          text: buildEmployeeCodeEmailText(message),
+        },
+        apiKey,
+        { employeeId: message.employeeId },
+      );
+      console.info('[email] Using HTTP transactional email provider');
       try {
         const response = await fetch(apiUrl, {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
-          },
-          body: JSON.stringify({
-            from,
-            to: message.to,
-            subject: 'Tu c\u00f3digo de acceso a WorkFlowPlus',
-            text: buildEmployeeCodeEmailText(message),
-            employeeId: message.employeeId,
-          }),
+          headers: request.headers,
+          body: request.body,
         });
+        if (!response.ok) {
+          console.error('[email] HTTP email delivery failed with status', response.status);
+        }
         return { emailSent: response.ok };
-      } catch {
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : 'unknown error';
+        console.error('[email] HTTP email delivery failed:', reason);
         return { emailSent: false };
       }
     },
@@ -716,14 +780,12 @@ export function createConfiguredTransactionalEmailMailer(): TransactionalEmailMa
       console.info('[email] Using HTTP transactional email provider');
       const apiKey = process.env.TRANSACTIONAL_EMAIL_API_KEY;
       const from = process.env.TRANSACTIONAL_EMAIL_FROM ?? 'access@your-domain.com';
+      const request = buildHttpEmailRequest(apiUrl, from, message, apiKey);
       try {
         const response = await fetch(apiUrl, {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
-          },
-          body: JSON.stringify({ from, ...message }),
+          headers: request.headers,
+          body: request.body,
         });
         if (!response.ok) {
           console.error('[email] HTTP email delivery failed with status', response.status);

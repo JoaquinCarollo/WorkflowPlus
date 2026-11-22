@@ -679,4 +679,83 @@ describe('transactional email provider configuration', () => {
       errorSpy.mockRestore();
     }
   });
+
+  it('uses the Brevo payload for transactional emails', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    process.env.TRANSACTIONAL_EMAIL_API_URL = 'https://api.brevo.com/v3/smtp/email';
+    process.env.TRANSACTIONAL_EMAIL_API_KEY = 'xkeysib-test';
+    process.env.TRANSACTIONAL_EMAIL_FROM = 'sender@example.test';
+
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 201 }) as Response);
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    try {
+      await expect(
+        createConfiguredTransactionalEmailMailer().sendEmail({
+          to: 'owner@example.test',
+          subject: 'Recuperación',
+          text: 'Contenido',
+        }),
+      ).resolves.toEqual({ emailSent: true });
+
+      const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(init.headers).toMatchObject({ 'api-key': 'xkeysib-test' });
+      const body = JSON.parse(String(init.body)) as {
+        sender: { name: string; email: string };
+        to: Array<{ email: string }>;
+        subject: string;
+        textContent: string;
+        htmlContent: string;
+      };
+      expect(body.sender).toEqual({ name: 'WorkFlowPlus', email: 'sender@example.test' });
+      expect(body.to).toEqual([{ email: 'owner@example.test' }]);
+      expect(body.subject).toBe('Recuperación');
+      expect(body.textContent).toBe('Contenido');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('uses the Brevo payload for employee invitation emails', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    process.env.TRANSACTIONAL_EMAIL_API_URL = 'https://api.brevo.com/v3/smtp/email';
+    process.env.TRANSACTIONAL_EMAIL_API_KEY = 'xkeysib-test';
+    process.env.TRANSACTIONAL_EMAIL_FROM = 'sender@example.test';
+
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 201 }) as Response);
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    try {
+      await expect(
+        createConfiguredEmployeeCodeMailer().sendEmployeeCodeEmail({
+          to: 'employee@example.test',
+          employeeId: 'emp-1',
+          organizationId: 'org-1',
+          firstName: 'Ana',
+          position: 'Analista',
+          accessCode: 'ABC123',
+        }),
+      ).resolves.toEqual({ emailSent: true });
+
+      const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(String(init.body)) as {
+        subject: string;
+        textContent: string;
+        employeeId?: string;
+      };
+      expect(body.subject).toBe('Tu c\u00f3digo de acceso a WorkFlowPlus');
+      expect(body.textContent).toContain('ABC123');
+      expect(body.employeeId).toBeUndefined();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });

@@ -152,6 +152,7 @@ export async function verifyAccountExists(
   email: string,
 ): Promise<boolean> {
   if (!client.listUsers) {
+    console.error('[supabase] Admin client unavailable');
     return false;
   }
   const normalized = email.trim().toLowerCase();
@@ -159,6 +160,7 @@ export async function verifyAccountExists(
   for (;;) {
     const { data, error } = await client.listUsers({ page, perPage: 200 });
     if (error) {
+      console.error('[supabase] Account lookup failed:', error.message);
       return false;
     }
     if (data.users.some((user) => user.email.trim().toLowerCase() === normalized)) {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   registerOrganization,
   signInOrganization,
@@ -94,5 +94,33 @@ describe('organization access flow', () => {
     const client = fakeClient({ users: [{ id: 'u1', email: 'Owner@Empresa.test' }] });
     await expect(verifyAccountExists(client, 'owner@empresa.test')).resolves.toBe(true);
     await expect(verifyAccountExists(client, 'other@empresa.test')).resolves.toBe(false);
+  });
+
+  it('logs account lookup errors without exposing the email', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const client: SupabaseAuthClient = {
+      listUsers: async () => ({
+        data: { users: [] },
+        error: { message: 'invalid service role' },
+      }),
+      signUp: async () => ({
+        data: { user: null, session: null },
+        error: null,
+      }),
+      signInWithPassword: async () => ({
+        data: { user: null, session: null },
+        error: null,
+      }),
+    };
+
+    try {
+      await expect(verifyAccountExists(client, 'owner@empresa.test')).resolves.toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[supabase] Account lookup failed:',
+        'invalid service role',
+      );
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });
