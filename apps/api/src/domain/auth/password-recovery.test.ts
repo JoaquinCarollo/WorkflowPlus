@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   passwordRecoveryPolicyAgent,
   passwordReuseCheckAgent,
@@ -96,6 +96,29 @@ describe('account existence checks', () => {
     await expect(
       requestPasswordRecovery({ email: 'OWNER@EMPRESA.TEST' }, client, mailer),
     ).resolves.toMatchObject({ status: 'email_sent', emailSent: true, accountExists: true });
+  });
+
+  it('logs when recovery is skipped for an unknown account', async () => {
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+    const client: SupabaseAuthClient = {
+      listUsers: async () => ({ data: { users: [] }, error: null }),
+      signUp: async () => ({ data: { user: null, session: null }, error: null }),
+      signInWithPassword: async () => ({
+        data: { user: null, session: null },
+        error: { message: 'invalid credentials' },
+      }),
+    };
+
+    try {
+      await requestPasswordRecovery(
+        { email: 'unknown@example.test' },
+        client,
+        capturingMailer().mailer,
+      );
+      expect(infoSpy).toHaveBeenCalledWith('[email] Recovery skipped: account not found');
+    } finally {
+      infoSpy.mockRestore();
+    }
   });
 });
 

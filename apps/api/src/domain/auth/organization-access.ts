@@ -282,6 +282,7 @@ export async function requestPasswordRecovery(
 ): Promise<PasswordRecoveryResult> {
   const accountExists = await verifyAccountExists(client, input.email);
   if (!accountExists) {
+    console.info('[email] Recovery skipped: account not found');
     return { status: 'denied', emailSent: false, accountExists: false };
   }
   const email = normalizeEmail(input.email);
@@ -294,6 +295,7 @@ export async function requestPasswordRecovery(
     text: `Hola, para recuperar tu contraseña de WorkFlowPlus entrá a este enlace: ${link}. El enlace es de un solo uso.`,
   });
   if (!emailSent) {
+    console.error('[email] Recovery delivery failed for an existing account');
     consumeRecoveryToken(token);
   }
   return { status: emailSent ? 'email_sent' : 'denied', emailSent, accountExists };

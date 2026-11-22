@@ -296,6 +296,7 @@ export function createApp(
   });
 
   app.post('/auth/organizations/password-recovery', async (request, response) => {
+    console.info('[auth] Password recovery requested');
     const parsed = recoverySchema.safeParse(request.body);
     if (!parsed.success) {
       response.status(200).json({ status: 'denied', emailSent: false });
