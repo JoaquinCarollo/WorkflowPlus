@@ -34,7 +34,6 @@ export async function signInOrganization(input: SignInInput): Promise<Organizati
 export interface PasswordRecoveryResult {
   status: 'email_sent' | 'denied';
   emailSent: boolean;
-  accountExists: boolean;
 }
 
 export interface PasswordResetResult {

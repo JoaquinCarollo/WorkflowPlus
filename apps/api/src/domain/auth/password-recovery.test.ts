@@ -119,6 +119,23 @@ describe('password reset flow', () => {
     expect(deniedMailer.messages).toHaveLength(0);
   });
 
+  it('reports a delivery failure for an existing account and discards the token', async () => {
+    const client = fakeRecoveryClient(false);
+    let capturedToken = '';
+    const failingMailer: TransactionalEmailMailer = {
+      sendEmail: async (message) => {
+        capturedToken = message.text.match(/token=([A-Za-z0-9_-]+)/)?.[1] ?? '';
+        return { emailSent: false };
+      },
+    };
+
+    await expect(
+      requestPasswordRecovery({ email: 'owner@empresa.test' }, client, failingMailer),
+    ).resolves.toMatchObject({ status: 'denied', emailSent: false, accountExists: true });
+    expect(capturedToken).not.toBe('');
+    expect(readRecoveryToken(capturedToken)).toBeNull();
+  });
+
   it('denies reset when the new password matches the forgotten one', async () => {
     storeRecoveryToken({ email: 'owner@empresa.test', token: 'token-reused' });
     const result = await resetPasswordWithToken(

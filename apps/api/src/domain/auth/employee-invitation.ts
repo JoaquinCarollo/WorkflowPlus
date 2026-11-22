@@ -629,6 +629,16 @@ function readSmtpConfig(): SmtpConfig | null {
   return { host, port: Number(process.env.SMTP_PORT ?? 587), user, pass };
 }
 
+export function assertTransactionalEmailProviderConfigured(): void {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !readSmtpConfig() &&
+    !process.env.TRANSACTIONAL_EMAIL_API_URL
+  ) {
+    throw new Error('No transactional email provider is configured');
+  }
+}
+
 async function sendViaSmtp(config: SmtpConfig, options: SmtpMailOptions): Promise<void> {
   const transporter = nodemailer.createTransport({
     host: config.host,
@@ -640,6 +650,7 @@ async function sendViaSmtp(config: SmtpConfig, options: SmtpMailOptions): Promis
 }
 
 export function createConfiguredEmployeeCodeMailer(): EmployeeCodeEmailMailer {
+  assertTransactionalEmailProviderConfigured();
   return {
     async sendEmployeeCodeEmail(message: EmployeeCodeEmailMessage) {
       const smtpConfig = readSmtpConfig();
@@ -682,6 +693,7 @@ export function createConfiguredEmployeeCodeMailer(): EmployeeCodeEmailMailer {
 }
 
 export function createConfiguredTransactionalEmailMailer(): TransactionalEmailMailer {
+  assertTransactionalEmailProviderConfigured();
   return {
     async sendEmail(message: TransactionalEmailMessage) {
       const smtpConfig = readSmtpConfig();

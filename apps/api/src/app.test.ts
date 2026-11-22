@@ -25,6 +25,26 @@ describe('API', () => {
     expect(app.router.stack.some((layer) => layer.route?.path === '/health')).toBe(true);
   });
 
+  it('does not expose account existence in password recovery responses', async () => {
+    const app = createApp();
+    const server = app.listen(0);
+    const address = server.address();
+    const port = typeof address === 'object' && address !== null ? address.port : 0;
+    const baseUrl = `http://127.0.0.1:${port}`;
+
+    try {
+      const response = await fetch(`${baseUrl}/auth/organizations/password-recovery`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ status: 'denied', emailSent: false });
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+  });
+
   it('returns the browser origin in CORS headers when WEB_ORIGIN includes a path', async () => {
     process.env.WEB_ORIGIN = 'https://JoaquinCarollo.github.io/WorkflowPlus/';
     const app = createApp();

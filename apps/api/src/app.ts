@@ -298,11 +298,14 @@ export function createApp(
   app.post('/auth/organizations/password-recovery', async (request, response) => {
     const parsed = recoverySchema.safeParse(request.body);
     if (!parsed.success) {
-      response.status(400).json({ status: 'denied', emailSent: false, accountExists: false });
+      response.status(200).json({ status: 'denied', emailSent: false });
       return;
     }
     const result = await requestPasswordRecovery(parsed.data, ...(authClient ? [authClient] : []));
-    response.status(result.status === 'denied' ? 400 : 200).json(result);
+    response.status(200).json({
+      status: result.status,
+      emailSent: result.emailSent,
+    });
   });
 
   app.post('/employees/invites', async (request, response) => {

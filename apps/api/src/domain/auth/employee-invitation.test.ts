@@ -2,6 +2,7 @@
 import { createApp } from '../../app.js';
 import { digestEmployeeAccessCode } from './employee-access-code.js';
 import {
+  assertTransactionalEmailProviderConfigured,
   assignDepartmentLead,
   canAssignTaskToEmployee,
   clearEmployeeInvitationsForTest,
@@ -584,5 +585,52 @@ describe('department leads', () => {
     expect(canAssignTaskToEmployee(adminLeader, ORGANIZATION_ID, 'emp-operative-1').allowed).toBe(
       true,
     );
+  });
+});
+
+describe('transactional email provider configuration', () => {
+  const original = {
+    NODE_ENV: process.env.NODE_ENV,
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_USER: process.env.SMTP_USER,
+    SMTP_PASS: process.env.SMTP_PASS,
+    TRANSACTIONAL_EMAIL_API_URL: process.env.TRANSACTIONAL_EMAIL_API_URL,
+  };
+
+  afterEach(() => {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  });
+
+  it('fails fast in production when no mail provider is configured', () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    delete process.env.TRANSACTIONAL_EMAIL_API_URL;
+
+    expect(() => assertTransactionalEmailProviderConfigured()).toThrow(
+      'No transactional email provider is configured',
+    );
+  });
+
+  it('accepts SMTP or HTTP provider configuration in production', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.SMTP_HOST = 'smtp.example.test';
+    process.env.SMTP_USER = 'user@example.test';
+    process.env.SMTP_PASS = 'not-a-real-password';
+    delete process.env.TRANSACTIONAL_EMAIL_API_URL;
+    expect(() => assertTransactionalEmailProviderConfigured()).not.toThrow();
+
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    process.env.TRANSACTIONAL_EMAIL_API_URL = 'https://mail.example.test/send';
+    expect(() => assertTransactionalEmailProviderConfigured()).not.toThrow();
   });
 });

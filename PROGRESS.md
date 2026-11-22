@@ -533,3 +533,12 @@
 - Revisión posterior: se detectó que quitar el path de `WEB_ORIGIN` rompía los links por email; se conservó el valor con path en `render.yaml` y se reforzó la normalización CORS. Corrección 1/3 de este ciclo aplicada.
 - Verificación final: `npm run check` pasó format, lint, typecheck, 86 API tests y 52 web tests. No blockers locales.
 - Pendiente externo: redesplegar la API para que el código normalizado llegue a producción; no hace falta cambiar variables en Render. El frontend ya publicado apunta a `https://workflowplus-api.onrender.com`.
+
+## 2026-11-22 - Correo de recuperación no llega en la demo pública
+
+- Causa: `render.yaml` no declaraba `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` ni `TRANSACTIONAL_EMAIL_FROM`. En producción, sin proveedor configurado, `createConfiguredTransactionalEmailMailer` devuelve `emailSent: false`; el token se descarta y no se envía ningún mail. Además, `handleRecovery` mostraba el mensaje de éxito sin leer el resultado, así que la UI decía "revisá tu correo" aunque el envío hubiera fallado.
+- Fix: el blueprint declara las variables SMTP (`sync: false` para secretos, puerto 587) para que se carguen en Render; `assertTransactionalEmailProviderConfigured` falla en el arranque de producción si no hay SMTP ni API URL, evitando un deploy que "éxite" sin enviar mails; el endpoint de recuperación responde siempre 200 con `{ status, emailSent }` y la UI mantiene el aviso genérico para no enumerar cuentas. Se agregaron tests de mailer fallido, configuración de proveedor y contrato HTTP.
+- Revisión posterior 1: la primera versión mostraba un error distinto cuando la cuenta existía pero fallaba el envío, lo que permitía enumerar cuentas. Corrección 1/3 aplicada: mensaje siempre genérico y `accountExists` eliminado del contrato web.
+- Revisión posterior 2: el código HTTP 400/200 seguía distinguiendo cuentas existentes. Corrección 2/3 aplicada: el endpoint responde 200 en todos los casos.
+- Verificación final: `npm run check` pasó format, lint, typecheck, 90 API tests y 52 web tests. No blockers locales.
+- Pendiente externo: cargar en Render los mismos valores SMTP que ya están en `apps/api/.env` (sin commitearlos) y redesplegar la API. Opcionalmente se puede usar `TRANSACTIONAL_EMAIL_API_URL` / `TRANSACTIONAL_EMAIL_API_KEY` en lugar de SMTP.
